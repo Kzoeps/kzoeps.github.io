@@ -36,7 +36,6 @@ function loadData() {
 
             // Style function for GeoJSON layer
             function style(feature) {
-                console.log(feature)
                 return {
                     fillColor: getColor(populationData[feature.properties.NAME_1]?.["Both Sex"]),
                     weight: 2,
