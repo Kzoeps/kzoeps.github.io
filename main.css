@@ -17,3 +17,16 @@
         margin-right: 8px;
         opacity: 0.7;
     }
+
+    .info-box {
+        display: none;
+        position: absolute;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        pointer-events: none;
+        max-width: 200px;
+    }

@@ -25,13 +25,12 @@ function loadData() {
             // Function to get color based on population
             function getColor(d) {
                 return d > 100000 ? '#800026' :
-                    d > 50000 ? '#BD0026' :
-                        d > 20000 ? '#E31A1C' :
-                            d > 10000 ? '#FC4E2A' :
+                    d > 60000 ? '#BD0026' :
+                        d > 35000 ? '#E31A1C' :
+                            d > 15000 ? '#FC4E2A' :
                                 d > 5000 ? '#FD8D3C' :
                                     d > 2000 ? '#FEB24C' :
-                                        d > 1000 ? '#FED976' :
-                                            '#FFEDA0';
+                                        '#FFEDA0';
             }
 
             // Style function for GeoJSON layer
@@ -45,6 +44,26 @@ function loadData() {
                     fillOpacity: 0.7
                 };
             }
+            const legend = L.control({ position: 'bottomright' });
+
+            legend.onAdd = function (map) {
+                const div = L.DomUtil.create('div', 'info legend');
+                const populations = [0, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
+
+                // Legend title
+                div.innerHTML += '<h4>Population</h4>';
+
+                // Loop through population intervals and generate a label with a colored square for each interval
+                for (let i = 0; i < populations.length; i++) {
+                    div.innerHTML +=
+                        '<i style="background:' + getColor(populations[i] + 1) + '"></i> ' +
+                        populations[i] + (populations[i + 1] ? '&ndash;' + populations[i + 1] + '<br>' : '+');
+                }
+
+                return div;
+            };
+
+            legend.addTo(map);
 
             // Add GeoJSON data to the map
             L.geoJSON(geoJsonData, {
