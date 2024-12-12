@@ -7,21 +7,6 @@ function loadData() {
             const map = L.map('map').setView([27.5142, 90.4336], 8);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-            // Control to display Dzongkhag name and population
-            const info = L.control();
-
-            info.onAdd = function (map) {
-                this._div = L.DomUtil.create('div', 'info');
-                this.update();
-                return this._div;
-            };
-
-            info.update = function (props) {
-                this._div.innerHTML = '<h3>' + (props ? props.NAME_1 + '<br>Population: ' + populationData[props.NAME_1]?.["Both Sex"] : 'Hover over a Dzongkhag') + '</h3>';
-            };
-
-            info.addTo(map);
-
             // Function to get color based on population
             function getColor(d) {
                 return d > 100000 ? '#800026' :
@@ -69,13 +54,13 @@ function loadData() {
             L.geoJSON(geoJsonData, {
                 style: style,
                 onEachFeature: function (feature, layer) {
-                    layer.on({
-                        mouseover: function (e) {
-                            info.update(feature.properties);
-                        },
-                        mouseout: function (e) {
-                            info.update();
-                        }
+                    layer.bindTooltip(`
+                        <strong>${feature.properties.NAME_1}</strong><br>
+                        Population: ${populationData[feature.properties.NAME_1]?.["Both Sex"]}
+                    `, {
+                        permanent: false,
+                        direction: 'right',
+                        className: 'dzongkhag-tooltip'
                     });
                 }
             }).addTo(map);
