@@ -1,9 +1,104 @@
+// Navigation data structure
+const mapDataCategories = {
+    population: {
+        label: 'Population',
+        subsections: {
+            total: 'Total Population',
+            male: 'Male Population',
+            female: 'Female Population'
+        }
+    },
+    economy: {
+        label: 'Economy',
+        subsections: {
+            unemployment: 'Unemployment Rate',
+            gdpPerCapita: 'GDP per Capita',
+            medianIncome: 'Median Income'
+        }
+    },
+    environment: {
+        label: 'Environment',
+        subsections: {
+            forestCoverage: 'Forest Coverage',
+            protectedLands: 'Protected Lands',
+            carbonEmissions: 'Carbon Emissions'
+        }
+    }
+};
+
+function createNavigation() {
+    // Create navigation container
+    const navContainer = document.createElement('div');
+    navContainer.id = 'map-data-nav';
+    navContainer.className = 'map-data-nav';
+
+    // Create navigation header
+    const navHeader = document.createElement('div');
+    navHeader.className = 'nav-header';
+    navHeader.innerHTML = '<h2>Bhutan Data Explorer</h2>';
+    navContainer.appendChild(navHeader);
+
+    // Create navigation menu
+    const navMenu = document.createElement('nav');
+    navMenu.className = 'nav-menu';
+
+    // Iterate through main categories
+    Object.entries(mapDataCategories).forEach(([categoryKey, categoryData]) => {
+        const categorySection = document.createElement('div');
+        categorySection.className = 'nav-category';
+
+        // Category label
+        const categoryLabel = document.createElement('div');
+        categoryLabel.className = 'nav-category-label';
+        categoryLabel.textContent = categoryData.label;
+        categoryLabel.addEventListener('click', () => {
+            categorySection.classList.toggle('expanded');
+        });
+        categorySection.appendChild(categoryLabel);
+
+        // Subsections
+        const subsectionsContainer = document.createElement('div');
+        subsectionsContainer.className = 'nav-subsections';
+
+        Object.entries(categoryData.subsections).forEach(([subKey, subLabel]) => {
+            const subsectionItem = document.createElement('div');
+            subsectionItem.className = 'nav-subsection-item';
+            subsectionItem.textContent = subLabel;
+            subsectionItem.dataset.category = categoryKey;
+            subsectionItem.dataset.subcategory = subKey;
+
+            // Add click event to load different map data
+            subsectionItem.addEventListener('click', () => {
+                loadMapData(categoryKey, subKey);
+
+                // Highlight selected item
+                document.querySelectorAll('.nav-subsection-item').forEach(el =>
+                    el.classList.remove('selected'));
+                subsectionItem.classList.add('selected');
+            });
+
+            subsectionsContainer.appendChild(subsectionItem);
+        });
+
+        categorySection.appendChild(subsectionsContainer);
+        navMenu.appendChild(categorySection);
+    });
+
+    navContainer.appendChild(navMenu);
+
+    // Add to map container
+    const mapContainer = document.getElementById('map');
+    mapContainer.style.position = 'relative';
+    mapContainer.appendChild(navContainer);
+}
+
 function loadData() {
     Promise.all([
         d3.json("gadm41_BTN_1.json"),
         d3.json("data/dzongkhag-population.json")
     ])
         .then(([geoJsonData, populationData]) => {
+            createNavigation();
             const map = L.map('map').setView([27.5142, 90.4336], 8);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
