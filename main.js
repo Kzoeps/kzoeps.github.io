@@ -116,14 +116,14 @@ function getPopulationColors(d, selectedSubcategory) {
                             '#FFEDA0';
     const percentageWise = d > 60 ? '#FF5733' :
         d > 55 ? '#FF6F61' :
-        d > 50 ? '#FF8D72' :
-        d > 45 ? '#FFA07A' :
-        d > 40 ? '#FFB6C1' :
-        d > 35 ? '#FFDAB9' :
-        d > 30 ? '#FFE4B5' :
-        d > 25 ? '#FFFACD' :
-        d > 20 ? '#FFFFE0' :
-        '#FFFFFF';
+            d > 50 ? '#FF8D72' :
+                d > 45 ? '#FFA07A' :
+                    d > 40 ? '#FFB6C1' :
+                        d > 35 ? '#FFDAB9' :
+                            d > 30 ? '#FFE4B5' :
+                                d > 25 ? '#FFFACD' :
+                                    d > 20 ? '#FFFFE0' :
+                                        '#FFFFFF';
     switch (selectedSubcategory) {
         case POPULATION_SUBCATEGORIES.totalPopulation:
             return numbersWise
@@ -133,7 +133,8 @@ function getPopulationColors(d, selectedSubcategory) {
             return numbersWise
         case POPULATION_SUBCATEGORIES.malePopulationPercentage:
             return percentageWise
-
+        case POPULATION_SUBCATEGORIES.femalePopulationPercentage:
+            return percentageWise
     }
 }
 
@@ -141,7 +142,7 @@ const PERCENTAGE_WISE_SUBCATEGORIES = [POPULATION_SUBCATEGORIES.malePopulationPe
 
 const formatNumber = (number) => {
     const userLocale = window.navigator.language;
-    return new Intl.NumberFormat(userLocale).format(number);
+    return new Intl.NumberFormat(userLocale, { maximumFractionDigits: 1 }).format(number);
 }
 
 function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcategory = 'total-population') {
@@ -178,6 +179,9 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                         break;
                     case POPULATION_SUBCATEGORIES.malePopulationPercentage:
                         populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Male"] / populationData[feature.properties.NAME_1]?.["Both Sex"] * 100);
+                        break;
+                    case POPULATION_SUBCATEGORIES.femalePopulationPercentage:
+                        populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Female"] / populationData[feature.properties.NAME_1]?.["Both Sex"] * 100);
                         break;
                     default:
                         populationValue = populationData[feature.properties.NAME_1]?.["Both Sex"];
@@ -253,9 +257,13 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                             populationLabel = "Female Population"
                             break;
                         case POPULATION_SUBCATEGORIES.malePopulationPercentage:
-                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Male"] / populationData[feature.properties.NAME_1]?.["Both Sex"] * 100);
+                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Male"] / populationData[feature.properties.NAME_1]?.["Both Sex"] * 100) + "%";
                             populationLabel = "Male Population Percentage"
-                            break
+                            break;
+                        case POPULATION_SUBCATEGORIES.femalePopulationPercentage:
+                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Female"] / populationData[feature.properties.NAME_1]?.["Both Sex"] * 100) + "%";
+                            populationLabel = "Female Population Percentage"
+                            break;
                         default:
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Both Sex"]);
                             populationLabel = "Total Population"
