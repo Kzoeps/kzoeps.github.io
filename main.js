@@ -114,16 +114,16 @@ function getPopulationColors(d, selectedSubcategory) {
                     d > 5000 ? '#FD8D3C' :
                         d > 2000 ? '#FEB24C' :
                             '#FFEDA0';
-    const percentageWise = d > 90 ? '#800026' :
-        d > 80 ? '#BD0026' :
-            d > 70 ? '#E31A1C' :
-                d > 60 ? '#FC4E2A' :
-                    d > 50 ? '#FD8D3C' :
-                        d > 40 ? '#FEB24C' :
-                            d > 30 ? '#FED976' :
-                                d > 20 ? '#FFEDA0' :
-                                    d > 10 ? '#FFFFCC' :
-                                        '#FFFFFF';
+    const percentageWise = d > 60 ? '#FF5733' :
+        d > 55 ? '#FF6F61' :
+        d > 50 ? '#FF8D72' :
+        d > 45 ? '#FFA07A' :
+        d > 40 ? '#FFB6C1' :
+        d > 35 ? '#FFDAB9' :
+        d > 30 ? '#FFE4B5' :
+        d > 25 ? '#FFFACD' :
+        d > 20 ? '#FFFFE0' :
+        '#FFFFFF';
     switch (selectedSubcategory) {
         case POPULATION_SUBCATEGORIES.totalPopulation:
             return numbersWise
@@ -204,7 +204,7 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
             legend.onAdd = function (map) {
                 const div = L.DomUtil.create('div', 'info legend');
                 const populations = [0, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
-                const percentages = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90];
+                const percentages = [20, 25, 30, 35, 40, 45, 50, 55, 60];
 
                 // Update legend title based on subcategory
                 const legendTitles = {
