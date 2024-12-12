@@ -7,7 +7,8 @@ const POPULATION_SUBCATEGORIES = {
     malePopulation: 'male-population',
     femalePopulation: 'femail-population',
     malePopulationPercentage: 'male-population-percentage',
-    femalePopulationPercentage: 'female-population-percentage'
+    femalePopulationPercentage: 'female-population-percentage',
+    populationDensity: 'population-density'
 }
 const mapDataCategories = [
     {
@@ -34,6 +35,11 @@ const mapDataCategories = [
             {
                 label: "Female Population Percentage",
                 id: POPULATION_SUBCATEGORIES.femalePopulationPercentage
+            },
+            {
+                label: "Population Density",
+                id: POPULATION_SUBCATEGORIES.populationDensity,
+                dataPath: 'data/pop-density.json'
             }
         ]
     },
@@ -91,7 +97,8 @@ function createNavigation() {
                 }
                 activeSubCategory = subsectionItem;
                 subsectionItem.classList.add('active');
-                loadData(categoryData.dataPath, subData.id)
+                console.log(subData.dataPath)
+                loadData(subData.dataPath || categoryData.dataPath || 'data/dzongkhag-population.json', subData.id)
             })
             subsectionsContainer.appendChild(subsectionItem);
         });
@@ -124,6 +131,13 @@ function getPopulationColors(d, selectedSubcategory) {
                                 d > 25 ? '#FFFACD' :
                                     d > 20 ? '#FFFFE0' :
                                         '#FFFFFF';
+    const densityWise = d > 50 ? '#800026' :
+        d > 40 ? '#BD0026' :
+            d > 30 ? '#E31A1C' :
+                d > 20 ? '#FC4E2A' :
+                    d > 10 ? '#FD8D3C' :
+                        d > 5 ? '#FEB24C' :
+                            '#FFEDA0';
     switch (selectedSubcategory) {
         case POPULATION_SUBCATEGORIES.totalPopulation:
             return numbersWise
@@ -135,6 +149,8 @@ function getPopulationColors(d, selectedSubcategory) {
             return percentageWise
         case POPULATION_SUBCATEGORIES.femalePopulationPercentage:
             return percentageWise
+        case POPULATION_SUBCATEGORIES.populationDensity:
+            return densityWise
     }
 }
 
@@ -183,6 +199,9 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                     case POPULATION_SUBCATEGORIES.femalePopulationPercentage:
                         populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Female"] / populationData[feature.properties.NAME_1]?.["Both Sex"] * 100);
                         break;
+                    case POPULATION_SUBCATEGORIES.populationDensity:
+                        populationValue = populationData[feature.properties.NAME_1]?.["density"]["2017"];
+                        break;
                     default:
                         populationValue = populationData[feature.properties.NAME_1]?.["Both Sex"];
                 }
@@ -209,6 +228,7 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                 const div = L.DomUtil.create('div', 'info legend');
                 const populations = [0, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
                 const percentages = [20, 25, 30, 35, 40, 45, 50, 55, 60];
+                const densities = [0, 5, 10, 20, 30, 40, 50];
 
                 // Update legend title based on subcategory
                 const legendTitles = {
@@ -216,14 +236,15 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                     [POPULATION_SUBCATEGORIES.malePopulation]: 'Male Population',
                     [POPULATION_SUBCATEGORIES.femalePopulation]: 'Female Population',
                     [POPULATION_SUBCATEGORIES.malePopulationPercentage]: "Male Population By Percentage",
-                    [POPULATION_SUBCATEGORIES.femalePopulationPercentage]: "Female Population By Percentage"
+                    [POPULATION_SUBCATEGORIES.femalePopulationPercentage]: "Female Population By Percentage",
+                    [POPULATION_SUBCATEGORIES.populationDensity]: "Population Density (per km²)"
                 };
 
                 // Legend title
                 div.innerHTML += `<h4>${legendTitles[selectedSubcategory]}</h4>`;
 
                 // Loop through population intervals and generate a label with a colored square for each interval
-                const loopOver = PERCENTAGE_WISE_SUBCATEGORIES.includes(selectedSubcategory) ? percentages : populations;
+                const loopOver = PERCENTAGE_WISE_SUBCATEGORIES.includes(selectedSubcategory) ? percentages : (selectedSubcategory === POPULATION_SUBCATEGORIES.populationDensity ? densities : populations);
                 for (let i = 0; i < loopOver.length; i++) {
                     div.innerHTML +=
                         '<i style="background:' + getColor(loopOver[i] + 1) + '"></i> ' +
@@ -263,6 +284,10 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                         case POPULATION_SUBCATEGORIES.femalePopulationPercentage:
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Female"] / populationData[feature.properties.NAME_1]?.["Both Sex"] * 100) + "%";
                             populationLabel = "Female Population Percentage"
+                            break;
+                        case POPULATION_SUBCATEGORIES.populationDensity:
+                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["density"]?.["2017"]);
+                            populationLabel = "Population Density (per km²)"
                             break;
                         default:
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Both Sex"]);
