@@ -3,14 +3,19 @@ const mapDataCategories = [
     {
         label: 'Population',
         id: 'population',
+        dataPath: 'data/dzongkhag-population.json',
         subsections: [
             {
                 label: 'Total Population',
                 id: 'total-population',
             },
             {
-                label: "Population By Sex",
-                id: "sex-population"
+                label: "Population By Male",
+                id: "male-population"
+            },
+            {
+                label: "Population By Female",
+                id: "female-population"
             }
         ]
     },
@@ -25,6 +30,8 @@ const mapDataCategories = [
         subsections: []
     }
 ];
+
+let activeSubCategory = null;
 
 function createNavigation() {
     // Create navigation container
@@ -57,8 +64,17 @@ function createNavigation() {
         subsectionsContainer.className = 'nav-subsections';
         categoryData.subsections.forEach((subData) => {
             const subsectionItem = document.createElement('div');
+            subsectionItem.id = subData.id;
             subsectionItem.className = 'nav-subsection-item';
             subsectionItem.textContent = subData.label;
+            subsectionItem.addEventListener('click', (e) => {
+                if (activeSubCategory) {
+                    activeSubCategory.classList.remove('active');
+                }
+                activeSubCategory = subsectionItem;
+                subsectionItem.classList.add('active');
+                loadData(categoryData.dataPath)
+            })
             subsectionsContainer.appendChild(subsectionItem);
         });
         categorySection.appendChild(subsectionsContainer);
@@ -71,7 +87,7 @@ function createNavigation() {
 
 }
 
-function loadData() {
+function loadData(dataPath = 'data/dzongkhag-population.json') {
     Promise.all([
         d3.json("gadm41_BTN_1.json"),
         d3.json("data/dzongkhag-population.json")
