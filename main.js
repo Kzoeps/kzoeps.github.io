@@ -1,11 +1,13 @@
 let map; // Declare map as a global variable
 let geoLayer; // To store and remove the existing GeoJSON layer
 let legend; // To store and remove the existing legend
+let selectedYear = '2017'; // Default year for population density
+
 // Navigation data structure
 const POPULATION_SUBCATEGORIES = {
     totalPopulation: 'total-population',
     malePopulation: 'male-population',
-    femalePopulation: 'femail-population',
+    femalePopulation: 'female-population',
     malePopulationPercentage: 'male-population-percentage',
     femalePopulationPercentage: 'female-population-percentage',
     populationDensity: 'population-density'
@@ -57,6 +59,29 @@ const mapDataCategories = [
 
 let activeSubCategory = null;
 
+function createTogglesForYear(years) {
+    const yearToggleContainer = document.createElement('div');
+    yearToggleContainer.id = 'year-toggle-container';
+    yearToggleContainer.className = 'year-toggle-container';
+    yearToggleContainer.innerHTML = `
+        <label for="year-toggle">Select Year:</label>
+        <select id="year-toggle">
+            <option value="2005">2005</option>
+            <option value="2017" selected>2017</option>
+        </select>
+    `;
+    yearToggleContainer.style.position = 'absolute';
+    yearToggleContainer.style.top = '10px';
+    yearToggleContainer.style.left = '40px';
+    yearToggleContainer.style.backgroundColor = 'white';
+    yearToggleContainer.style.padding = '10px';
+    yearToggleContainer.style.border = '1px solid #ccc';
+    yearToggleContainer.style.borderRadius = '4px';
+    yearToggleContainer.style.zIndex = '1000';
+    yearToggleContainer.style.display = 'none';
+    return yearToggleContainer
+}
+
 function createNavigation() {
     // Create navigation container
     const navContainer = document.createElement('div');
@@ -97,7 +122,6 @@ function createNavigation() {
                 }
                 activeSubCategory = subsectionItem;
                 subsectionItem.classList.add('active');
-                console.log(subData.dataPath)
                 loadData(subData.dataPath || categoryData.dataPath || 'data/dzongkhag-population.json', subData.id)
             })
             subsectionsContainer.appendChild(subsectionItem);
@@ -110,7 +134,17 @@ function createNavigation() {
     mapContainer.style.position = 'relative';
     mapContainer.appendChild(navContainer);
 
+    // Add year toggle for population density
+    const yearToggleContainer = createTogglesForYear() // Hide by default
+    mapContainer.appendChild(yearToggleContainer);
 
+    document.getElementById('year-toggle').addEventListener('change', (e) => {
+        console.log("How many event listenters")
+        if (activeSubCategory && activeSubCategory.id === POPULATION_SUBCATEGORIES.populationDensity && selectedYear !== e.target.value) {
+            loadData('data/pop-density.json', POPULATION_SUBCATEGORIES.populationDensity);
+        }
+        selectedYear = e.target.value;
+    });
 }
 
 function getPopulationColors(d, selectedSubcategory) {
@@ -161,10 +195,17 @@ const formatNumber = (number) => {
     return new Intl.NumberFormat(userLocale, { maximumFractionDigits: 1 }).format(number);
 }
 
+// Initialize the map once
+function initializeMap() {
+    map = L.map('map').setView([27.5142, 90.4336], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    createNavigation();
+}
+
 function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcategory = 'total-population') {
-    // Remove existing map if it exists
-    if (map) {
-        map.remove();
+    // Remove existing GeoJSON layer if it exists
+    if (geoLayer) {
+        map.removeLayer(geoLayer);
     }
 
     Promise.all([
@@ -172,10 +213,13 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
         d3.json(dataPath)
     ])
         .then(([geoJsonData, populationData]) => {
-            createNavigation();
-            // Reinitialize map
-            map = L.map('map').setView([27.5142, 90.4336], 8);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            // Show year toggle only for population density
+            const yearToggleContainer = document.getElementById('year-toggle-container');
+            if (selectedSubcategory === POPULATION_SUBCATEGORIES.populationDensity) {
+                yearToggleContainer.style.display = 'block';
+            } else {
+                yearToggleContainer.style.display = 'none';
+            }
 
             // Function to get color based on population
             function getColor(d) {
@@ -200,7 +244,7 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                         populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Female"] / populationData[feature.properties.NAME_1]?.["Both Sex"] * 100);
                         break;
                     case POPULATION_SUBCATEGORIES.populationDensity:
-                        populationValue = populationData[feature.properties.NAME_1]?.["density"]["2017"];
+                        populationValue = populationData[feature.properties.NAME_1]?.["density"]?.[selectedYear];
                         break;
                     default:
                         populationValue = populationData[feature.properties.NAME_1]?.["Both Sex"];
@@ -212,7 +256,7 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                     opacity: 1,
                     color: 'white',
                     dashArray: '3',
-                    fillOpacity: 0.7
+                    fillOpacity: 0.7 // Ensure fillOpacity is set correctly
                 };
             }
 
@@ -237,7 +281,7 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                     [POPULATION_SUBCATEGORIES.femalePopulation]: 'Female Population',
                     [POPULATION_SUBCATEGORIES.malePopulationPercentage]: "Male Population By Percentage",
                     [POPULATION_SUBCATEGORIES.femalePopulationPercentage]: "Female Population By Percentage",
-                    [POPULATION_SUBCATEGORIES.populationDensity]: "Population Density (per km²)"
+                    [POPULATION_SUBCATEGORIES.populationDensity]: `Population Density (per km²) - ${selectedYear}`
                 };
 
                 // Legend title
@@ -255,11 +299,6 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
             };
 
             legend.addTo(map);
-
-            // Remove existing GeoJSON layer if it exists
-            if (geoLayer) {
-                map.removeLayer(geoLayer);
-            }
 
             // Add new GeoJSON data to the map
             geoLayer = L.geoJSON(geoJsonData, {
@@ -286,8 +325,8 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                             populationLabel = "Female Population Percentage"
                             break;
                         case POPULATION_SUBCATEGORIES.populationDensity:
-                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["density"]?.["2017"]);
-                            populationLabel = "Population Density (per km²)"
+                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["density"]?.[selectedYear]);
+                            populationLabel = `Population Density (per km²) - ${selectedYear}`
                             break;
                         default:
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Both Sex"]);
@@ -310,4 +349,7 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
         });
 }
 
-loadData()
+// Initialize the map once
+initializeMap();
+createNavigation();
+loadData();
