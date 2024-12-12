@@ -1,30 +1,30 @@
 // Navigation data structure
-const mapDataCategories = {
-    population: {
+const mapDataCategories = [
+    {
         label: 'Population',
-        subsections: {
-            total: 'Total Population',
-            male: 'Male Population',
-            female: 'Female Population'
-        }
+        id: 'population',
+        subsections: [
+            {
+                label: 'Total Population',
+                id: 'total-population',
+            },
+            {
+                label: "Population By Sex",
+                id: "sex-population"
+            }
+        ]
     },
-    economy: {
+    {
         label: 'Economy',
-        subsections: {
-            unemployment: 'Unemployment Rate',
-            gdpPerCapita: 'GDP per Capita',
-            medianIncome: 'Median Income'
-        }
+        id: 'economy',
+        subsections: [],
     },
-    environment: {
+    {
         label: 'Environment',
-        subsections: {
-            forestCoverage: 'Forest Coverage',
-            protectedLands: 'Protected Lands',
-            carbonEmissions: 'Carbon Emissions'
-        }
+        id: 'environment',
+        subsections: []
     }
-};
+];
 
 function createNavigation() {
     // Create navigation container
@@ -43,53 +43,32 @@ function createNavigation() {
     navMenu.className = 'nav-menu';
 
     // Iterate through main categories
-    Object.entries(mapDataCategories).forEach(([categoryKey, categoryData]) => {
+    mapDataCategories.forEach((categoryData) => {
         const categorySection = document.createElement('div');
         categorySection.className = 'nav-category';
-
-        // Category label
         const categoryLabel = document.createElement('div');
+        categoryLabel.addEventListener('click', (e) => {
+            categorySection.classList.toggle('expanded');
+        })
         categoryLabel.className = 'nav-category-label';
         categoryLabel.textContent = categoryData.label;
-        categoryLabel.addEventListener('click', () => {
-            categorySection.classList.toggle('expanded');
-        });
         categorySection.appendChild(categoryLabel);
-
-        // Subsections
         const subsectionsContainer = document.createElement('div');
         subsectionsContainer.className = 'nav-subsections';
-
-        Object.entries(categoryData.subsections).forEach(([subKey, subLabel]) => {
+        categoryData.subsections.forEach((subData) => {
             const subsectionItem = document.createElement('div');
             subsectionItem.className = 'nav-subsection-item';
-            subsectionItem.textContent = subLabel;
-            subsectionItem.dataset.category = categoryKey;
-            subsectionItem.dataset.subcategory = subKey;
-
-            // Add click event to load different map data
-            subsectionItem.addEventListener('click', () => {
-                loadMapData(categoryKey, subKey);
-
-                // Highlight selected item
-                document.querySelectorAll('.nav-subsection-item').forEach(el =>
-                    el.classList.remove('selected'));
-                subsectionItem.classList.add('selected');
-            });
-
+            subsectionItem.textContent = subData.label;
             subsectionsContainer.appendChild(subsectionItem);
         });
-
         categorySection.appendChild(subsectionsContainer);
         navMenu.appendChild(categorySection);
-    });
-
+    })
     navContainer.appendChild(navMenu);
-
-    // Add to map container
     const mapContainer = document.getElementById('map');
     mapContainer.style.position = 'relative';
     mapContainer.appendChild(navContainer);
+
 }
 
 function loadData() {
