@@ -211,11 +211,11 @@ function getPopulationColors(d, selectedSubcategory) {
         case POPULATION_SUBCATEGORIES.femalePopulation:
             return numbersWise
         case POPULATION_SUBCATEGORIES.malePopulationPercentage:
-            return percentageWise
         case POPULATION_SUBCATEGORIES.femalePopulationPercentage:
             return percentageWise
         case POPULATION_SUBCATEGORIES.populationDensity:
             return densityWise
+        case UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage:
         case UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage:
         case UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage:
             return unemploymentWise;
@@ -396,6 +396,10 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["density"]?.[selectedYear]);
                             populationLabel = `Population Density (per km²) - ${selectedYear}`
                             break;
+                        case UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage:
+                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Unemployment Rate (%)"]?.["Total"]) + "%";
+                            populationLabel = "Total Unemployment Percentage";
+                            break;
                         case UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage:
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Unemployment Rate (%)"]?.["Male"]) + "%";
                             populationLabel = "Male Unemployment Percentage";
@@ -405,7 +409,7 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                             populationLabel = "Female Unemployment Percentage";
                             break;
                         default:
-                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Both Sex"]);
+                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Both Sex"]) + "%";
                             populationLabel = "Total Population"
                     }
 
