@@ -27,7 +27,7 @@ const mapDataCategories = [
     {
         label: 'Population',
         id: 'population',
-        dataPath: 'data/dzongkhag-population.json',
+        dataPath: '/data/dzongkhag-population.json',
         subsections: [
             {
                 label: 'Total Population',
@@ -52,7 +52,7 @@ const mapDataCategories = [
             {
                 label: "Population Density",
                 id: POPULATION_SUBCATEGORIES.populationDensity,
-                dataPath: 'data/pop-density.json',
+                dataPath: '/data/pop-density.json',
                 timeline: [2005, 2017]
             }
         ]
@@ -64,17 +64,17 @@ const mapDataCategories = [
             {
                 label: 'Total Unemployment Percentage',
                 id: UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage,
-                dataPath: 'data/unemployment.json'
+                dataPath: '/data/unemployment.json'
             },
             {
                 label: 'Male Unemployment Percentage',
                 id: UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage,
-                dataPath: 'data/unemployment.json'
+                dataPath: '/data/unemployment.json'
             },
             {
                 label: 'Female Unemployment Percentage',
                 id: UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage,
-                dataPath: 'data/unemployment.json'
+                dataPath: '/data/unemployment.json'
             }
         ],
     },
@@ -85,12 +85,12 @@ const mapDataCategories = [
             {
                 label: 'Forest Coverage Percentage',
                 id: FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage,
-                dataPath: 'data/forest-coverage.json'
+                dataPath: '/data/forest-coverage.json'
             },
             {
                 label: 'Annual Rainfall',
                 id: RAINFALL_SUBCATEGORIES.annualRainfall,
-                dataPath: 'data/annual-rainfall.json',
+                dataPath: '/data/annual-rainfall.json',
                 timeline: [2018, 2019, 2020, 2021, 2022]
             }
         ]
@@ -117,7 +117,7 @@ const handleYearChange = (e) => {
     console.log("How many changes")
     selectedYear = e.target.value;
     if (activeSubCategory && (activeSubCategory.id === POPULATION_SUBCATEGORIES.populationDensity || activeSubCategory.id === RAINFALL_SUBCATEGORIES.annualRainfall)) {
-        loadData(activeSubCategory.id === POPULATION_SUBCATEGORIES.populationDensity ? 'data/pop-density.json' : 'data/annual-rainfall.json', activeSubCategory.id);
+        loadData(activeSubCategory.id === POPULATION_SUBCATEGORIES.populationDensity ? '/data/pop-density.json' : '/data/annual-rainfall.json', activeSubCategory.id);
     }
 }
 
@@ -133,6 +133,14 @@ function updateYearToggle(years) {
     mapContainer.appendChild(updateYearToggle);
     document.addEventListener('change', handleYearChange);
     updateYearToggle.style.display = 'block';
+}
+
+function removeYearToggle() {
+    const yearToggle = document.getElementById('year-toggle-container');
+    if (yearToggle) {
+        yearToggle.removeEventListener('change', handleYearChange);
+        yearToggle.remove();
+    }
 }
 
 function createNavigation() {
@@ -177,8 +185,10 @@ function createNavigation() {
                 subsectionItem.classList.add('active');
                 if (subData.timeline) {
                     updateYearToggle(subData.timeline);
+                } else {
+                    removeYearToggle();
                 }
-                loadData(subData.dataPath || categoryData.dataPath || 'data/dzongkhag-population.json', subData.id)
+                loadData(subData.dataPath || categoryData.dataPath || '/data/dzongkhag-population.json', subData.id)
             })
             subsectionsContainer.appendChild(subsectionItem);
         });
@@ -317,13 +327,13 @@ const legendTitles = {
     [RAINFALL_SUBCATEGORIES.annualRainfall]: `Annual Rainfall (mm) - ${selectedYear}`
 };
 
-function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcategory = 'total-population') {
+function loadData(dataPath = '/data/dzongkhag-population.json', selectedSubcategory = 'total-population') {
     // Remove existing GeoJSON layer if it exists
     if (geoLayer) {
         map.removeLayer(geoLayer);
     }
     Promise.all([
-        d3.json("gadm41_BTN_1.json"),
+        d3.json("/data/dzongkhag-markers.json"),
         d3.json(dataPath)
     ])
         .then(([geoJsonData, populationData]) => {
