@@ -375,6 +375,7 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                     // Determine which population to display in tooltip
                     let populationValue;
                     let populationLabel;
+                    let additionalInfo = '';
                     switch (selectedSubcategory) {
                         case POPULATION_SUBCATEGORIES.malePopulation:
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Male"]);
@@ -399,23 +400,36 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                         case UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage:
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Unemployment Rate (%)"]?.["Total"]) + "%";
                             populationLabel = "Total Unemployment Percentage";
+                            additionalInfo = `
+                                Male Unemployed: ${populationData[feature.properties.NAME_1]?.["Number"]?.["Male"]}<br>
+                                Female Unemployed: ${populationData[feature.properties.NAME_1]?.["Number"]?.["Female"]}
+                            `;
                             break;
                         case UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage:
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Unemployment Rate (%)"]?.["Male"]) + "%";
                             populationLabel = "Male Unemployment Percentage";
+                            additionalInfo = `
+                                Male Unemployed: ${populationData[feature.properties.NAME_1]?.["Number"]?.["Male"]}<br>
+                                Female Unemployed: ${populationData[feature.properties.NAME_1]?.["Number"]?.["Female"]}
+                            `;
                             break;
                         case UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage:
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Unemployment Rate (%)"]?.["Female"]) + "%";
                             populationLabel = "Female Unemployment Percentage";
+                            additionalInfo = `
+                                Male Unemployed: ${populationData[feature.properties.NAME_1]?.["Number"]?.["Male"]}<br>
+                                Female Unemployed: ${populationData[feature.properties.NAME_1]?.["Number"]?.["Female"]}
+                            `;
                             break;
                         default:
-                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Both Sex"]) + "%";
+                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Both Sex"]);
                             populationLabel = "Total Population"
                     }
 
                     layer.bindTooltip(`
                         <strong>${feature.properties.NAME_1}</strong><br>
-                    ${populationLabel}: ${populationValue}
+                        ${populationLabel}: ${populationValue}<br>
+                        ${additionalInfo}
                     `, {
                         permanent: false,
                         direction: 'right',

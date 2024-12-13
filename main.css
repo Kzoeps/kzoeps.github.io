@@ -93,3 +93,14 @@
         background-color: #3498db;
         color: white;
     }
+
+    .year-toggle {
+        position: absolute;
+        top: 10px;
+        left: 50px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #f4f4f4;
+        z-index: 1000;
+    }
