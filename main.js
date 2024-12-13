@@ -12,6 +12,11 @@ const POPULATION_SUBCATEGORIES = {
     femalePopulationPercentage: 'female-population-percentage',
     populationDensity: 'population-density'
 }
+const UNEMPLOYMENT_SUBCATEGORIES = {
+    totalUnemploymentPercentage: 'total-unemployment-percentage',
+    maleUnemploymentPercentage: 'male-unemployment-percentage',
+    femaleUnemploymentPercentage: 'female-unemployment-percentage'
+};
 const mapDataCategories = [
     {
         label: 'Population',
@@ -48,7 +53,23 @@ const mapDataCategories = [
     {
         label: 'Economy',
         id: 'economy',
-        subsections: [],
+        subsections: [
+            {
+                label: 'Total Unemployment Percentage',
+                id: UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage,
+                dataPath: 'data/unemployment.json'
+            },
+            {
+                label: 'Male Unemployment Percentage',
+                id: UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage,
+                dataPath: 'data/unemployment.json'
+            },
+            {
+                label: 'Female Unemployment Percentage',
+                id: UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage,
+                dataPath: 'data/unemployment.json'
+            }
+        ],
     },
     {
         label: 'Environment',
@@ -147,6 +168,15 @@ function createNavigation() {
     });
 }
 
+function getUnemploymentColors(d) {
+    return d > 15 ? '#800026' :
+        d > 10 ? '#BD0026' :
+            d > 5 ? '#E31A1C' :
+                d > 2 ? '#FC4E2A' :
+                    d > 1 ? '#FD8D3C' :
+                        '#FEB24C';
+}
+
 function getPopulationColors(d, selectedSubcategory) {
     const numbersWise = d > 100000 ? '#800026' :
         d > 60000 ? '#BD0026' :
@@ -172,6 +202,7 @@ function getPopulationColors(d, selectedSubcategory) {
                     d > 10 ? '#FD8D3C' :
                         d > 5 ? '#FEB24C' :
                             '#FFEDA0';
+    const unemploymentWise = getUnemploymentColors(d);
     switch (selectedSubcategory) {
         case POPULATION_SUBCATEGORIES.totalPopulation:
             return numbersWise
@@ -185,15 +216,13 @@ function getPopulationColors(d, selectedSubcategory) {
             return percentageWise
         case POPULATION_SUBCATEGORIES.populationDensity:
             return densityWise
+        case UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage:
+        case UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage:
+            return unemploymentWise;
     }
 }
 
-const PERCENTAGE_WISE_SUBCATEGORIES = [POPULATION_SUBCATEGORIES.malePopulationPercentage, POPULATION_SUBCATEGORIES.femalePopulationPercentage];
-
-const formatNumber = (number) => {
-    const userLocale = window.navigator.language;
-    return new Intl.NumberFormat(userLocale, { maximumFractionDigits: 1 }).format(number);
-}
+const PERCENTAGE_WISE_SUBCATEGORIES = [POPULATION_SUBCATEGORIES.malePopulationPercentage, POPULATION_SUBCATEGORIES.femalePopulationPercentage, UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage, UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage, UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage];
 
 // Initialize the map once
 function initializeMap() {
@@ -201,6 +230,36 @@ function initializeMap() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     createNavigation();
 }
+
+const formatNumber = (number) => {
+    const userLocale = window.navigator.language;
+    return new Intl.NumberFormat(userLocale, { maximumFractionDigits: 1 }).format(number);
+}
+
+// based on different subcategories the values range differently
+const legendsValueMap = {
+    [POPULATION_SUBCATEGORIES.totalPopulation]: [0, 1000, 2000, 5000, 10000, 20000, 50000, 100000],
+    [POPULATION_SUBCATEGORIES.malePopulation]: [0, 1000, 2000, 5000, 10000, 20000, 50000, 100000],
+    [POPULATION_SUBCATEGORIES.femalePopulation]: [0, 1000, 2000, 5000, 10000, 20000, 50000, 100000],
+    [POPULATION_SUBCATEGORIES.malePopulationPercentage]: [20, 25, 30, 35, 40, 45, 50, 55, 60],
+    [POPULATION_SUBCATEGORIES.femalePopulationPercentage]: [20, 25, 30, 35, 40, 45, 50, 55, 60],
+    [POPULATION_SUBCATEGORIES.populationDensity]: [0, 5, 10, 20, 30, 40, 50],
+    [UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage]: [0, 1, 2, 5, 10, 15],
+    [UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage]: [0, 1, 2, 5, 10, 15],
+    [UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage]: [0, 1, 2, 5, 10, 15]
+}
+// Update legend title based on subcategory
+const legendTitles = {
+    [POPULATION_SUBCATEGORIES.totalPopulation]: 'Total Population',
+    [POPULATION_SUBCATEGORIES.malePopulation]: 'Male Population',
+    [POPULATION_SUBCATEGORIES.femalePopulation]: 'Female Population',
+    [POPULATION_SUBCATEGORIES.malePopulationPercentage]: "Male Population By Percentage",
+    [POPULATION_SUBCATEGORIES.femalePopulationPercentage]: "Female Population By Percentage",
+    [POPULATION_SUBCATEGORIES.populationDensity]: `Population Density (per km²) - ${selectedYear}`,
+    [UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage]: 'Total Unemployment Rate (%)',
+    [UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage]: 'Total Male Unemployment Rate (%)',
+    [UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage]: 'Total Female Unemployment Rate (%)'
+};
 
 function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcategory = 'total-population') {
     // Remove existing GeoJSON layer if it exists
@@ -246,6 +305,15 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                     case POPULATION_SUBCATEGORIES.populationDensity:
                         populationValue = populationData[feature.properties.NAME_1]?.["density"]?.[selectedYear];
                         break;
+                    case UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage:
+                        populationValue = populationData[feature.properties.NAME_1]?.["Unemployment Rate (%)"]?.["Male"];
+                        break;
+                    case UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage:
+                        populationValue = populationData[feature.properties.NAME_1]?.["Unemployment Rate (%)"]?.["Female"];
+                        break;
+                    case UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage:
+                        populationValue = populationData[feature.properties.NAME_1]?.["Unemployment Rate (%)"]?.["Total"];
+                        break;
                     default:
                         populationValue = populationData[feature.properties.NAME_1]?.["Both Sex"];
                 }
@@ -266,14 +334,10 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
             }
 
             // Create new legend
-            legend = L.control({ position: 'bottomright' });
+            legend = L.control({ position: 'bottomleft' });
 
             legend.onAdd = function (map) {
                 const div = L.DomUtil.create('div', 'info legend');
-                const populations = [0, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
-                const percentages = [20, 25, 30, 35, 40, 45, 50, 55, 60];
-                const densities = [0, 5, 10, 20, 30, 40, 50];
-
                 // Update legend title based on subcategory
                 const legendTitles = {
                     [POPULATION_SUBCATEGORIES.totalPopulation]: 'Total Population',
@@ -281,14 +345,18 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                     [POPULATION_SUBCATEGORIES.femalePopulation]: 'Female Population',
                     [POPULATION_SUBCATEGORIES.malePopulationPercentage]: "Male Population By Percentage",
                     [POPULATION_SUBCATEGORIES.femalePopulationPercentage]: "Female Population By Percentage",
-                    [POPULATION_SUBCATEGORIES.populationDensity]: `Population Density (per km²) - ${selectedYear}`
+                    [POPULATION_SUBCATEGORIES.populationDensity]: `Population Density (per km²) - ${selectedYear}`,
+                    [UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage]: 'Total Unemployment Rate (%)',
+                    [UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage]: 'Total Male Unemployment Rate (%)',
+                    [UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage]: 'Total Female Unemployment Rate (%)'
                 };
 
                 // Legend title
-                div.innerHTML += `<h4>${legendTitles[selectedSubcategory]}</h4>`;
+                div.innerHTML += `<h4 id="legendDhiAniEnn">${legendTitles[selectedSubcategory]}</h4>`;
 
                 // Loop through population intervals and generate a label with a colored square for each interval
-                const loopOver = PERCENTAGE_WISE_SUBCATEGORIES.includes(selectedSubcategory) ? percentages : (selectedSubcategory === POPULATION_SUBCATEGORIES.populationDensity ? densities : populations);
+                const loopOver = legendsValueMap[selectedSubcategory];
+                console.log(loopOver, "loopOver")
                 for (let i = 0; i < loopOver.length; i++) {
                     div.innerHTML +=
                         '<i style="background:' + getColor(loopOver[i] + 1) + '"></i> ' +
@@ -327,6 +395,14 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                         case POPULATION_SUBCATEGORIES.populationDensity:
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["density"]?.[selectedYear]);
                             populationLabel = `Population Density (per km²) - ${selectedYear}`
+                            break;
+                        case UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage:
+                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Unemployment Rate (%)"]?.["Male"]) + "%";
+                            populationLabel = "Male Unemployment Percentage";
+                            break;
+                        case UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage:
+                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Unemployment Rate (%)"]?.["Female"]) + "%";
+                            populationLabel = "Female Unemployment Percentage";
                             break;
                         default:
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Both Sex"]);
