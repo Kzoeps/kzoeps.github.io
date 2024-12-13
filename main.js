@@ -83,7 +83,7 @@ let activeSubCategory = null;
 function createTogglesForYear(years) {
     const yearToggleContainer = document.createElement('div');
     yearToggleContainer.id = 'year-toggle-container';
-    yearToggleContainer.className = 'year-toggle-container';
+    yearToggleContainer.className = 'year-toggle';
     yearToggleContainer.innerHTML = `
         <label for="year-toggle">Select Year:</label>
         <select id="year-toggle">
@@ -91,14 +91,6 @@ function createTogglesForYear(years) {
             <option value="2017" selected>2017</option>
         </select>
     `;
-    yearToggleContainer.style.position = 'absolute';
-    yearToggleContainer.style.top = '10px';
-    yearToggleContainer.style.left = '40px';
-    yearToggleContainer.style.backgroundColor = 'white';
-    yearToggleContainer.style.padding = '10px';
-    yearToggleContainer.style.border = '1px solid #ccc';
-    yearToggleContainer.style.borderRadius = '4px';
-    yearToggleContainer.style.zIndex = '1000';
     yearToggleContainer.style.display = 'none';
     return yearToggleContainer
 }
