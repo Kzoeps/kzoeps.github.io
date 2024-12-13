@@ -113,9 +113,26 @@ function createTogglesForYear(years) {
     return yearToggleContainer;
 }
 
+const handleYearChange = (e) => {
+    console.log("How many changes")
+    selectedYear = e.target.value;
+    if (activeSubCategory && (activeSubCategory.id === POPULATION_SUBCATEGORIES.populationDensity || activeSubCategory.id === RAINFALL_SUBCATEGORIES.annualRainfall)) {
+        loadData(activeSubCategory.id === POPULATION_SUBCATEGORIES.populationDensity ? 'data/pop-density.json' : 'data/annual-rainfall.json', activeSubCategory.id);
+    }
+}
+
 function updateYearToggle(years) {
-    const yearToggle = document.getElementById('year-toggle');
-    yearToggle.innerHTML = years.map(year => `<option value="${year}">${year}</option>`).join('');
+    const previousYearToggle = document.getElementById('year-toggle');
+    if (previousYearToggle) {
+        previousYearToggle.removeEventListener('change', handleYearChange);
+        previousYearToggle.remove()
+    }
+    selectedYear = years[0];
+    const updateYearToggle = createTogglesForYear(years);
+    const mapContainer = document.getElementById('map');
+    mapContainer.appendChild(updateYearToggle);
+    document.addEventListener('change', handleYearChange);
+    updateYearToggle.style.display = 'block';
 }
 
 function createNavigation() {
@@ -136,7 +153,6 @@ function createNavigation() {
 
     // Iterate through main categories
     mapDataCategories.forEach((categoryData) => {
-        console.log(categoryData)
         const categorySection = document.createElement('div');
         categorySection.className = 'nav-category';
         const categoryLabel = document.createElement('div');
@@ -160,8 +176,7 @@ function createNavigation() {
                 activeSubCategory = subsectionItem;
                 subsectionItem.classList.add('active');
                 if (subData.timeline) {
-                    console.log("getting called here")
-                    // selectedYear = subData.timeline[0];
+                    updateYearToggle(subData.timeline);
                 }
                 loadData(subData.dataPath || categoryData.dataPath || 'data/dzongkhag-population.json', subData.id)
             })
@@ -174,18 +189,6 @@ function createNavigation() {
     const mapContainer = document.getElementById('map');
     mapContainer.style.position = 'relative';
     mapContainer.appendChild(navContainer);
-
-    // Add year toggle for population density
-    const yearToggleContainer = createTogglesForYear([]); // Hide by default
-    mapContainer.appendChild(yearToggleContainer);
-
-    document.getElementById('year-toggle').addEventListener('change', (e) => {
-        if (activeSubCategory && (activeSubCategory.id === POPULATION_SUBCATEGORIES.populationDensity || activeSubCategory.id === RAINFALL_SUBCATEGORIES.annualRainfall) && selectedYear !== e.target.value) {
-            loadData(activeSubCategory.id === POPULATION_SUBCATEGORIES.populationDensity ? 'data/pop-density.json' : 'data/annual-rainfall.json', activeSubCategory.id);
-        }
-        console.log(e.target.value, "e.target.value")
-        selectedYear = e.target.value;
-    });
 }
 
 function getUnemploymentColors(d) {
@@ -319,33 +322,11 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
     if (geoLayer) {
         map.removeLayer(geoLayer);
     }
-
-    const category = mapDataCategories.find(cat => cat.subsections.some(sub => sub.id === selectedSubcategory));
-    const subcategory = category.subsections.find(sub => sub.id === selectedSubcategory);
-    const years = subcategory.timeline || [];
-
-    // Show year toggle only for population density and annual rainfall
-    const yearToggleContainer = document.getElementById('year-toggle-container');
-    if (years.length > 0) {
-        yearToggleContainer.style.display = 'block';
-        updateYearToggle(years);
-    } else {
-        yearToggleContainer.style.display = 'none';
-    }
-
     Promise.all([
         d3.json("gadm41_BTN_1.json"),
         d3.json(dataPath)
     ])
         .then(([geoJsonData, populationData]) => {
-            // Show year toggle only for population density and annual rainfall
-            const yearToggleContainer = document.getElementById('year-toggle-container');
-            if (selectedSubcategory === POPULATION_SUBCATEGORIES.populationDensity || selectedSubcategory === RAINFALL_SUBCATEGORIES.annualRainfall) {
-                yearToggleContainer.style.display = 'block';
-            } else {
-                yearToggleContainer.style.display = 'none';
-            }
-
             // Function to get color based on population
             function getColor(d) {
                 return getPopulationColors(d, selectedSubcategory);
@@ -430,7 +411,6 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
 
                 // Loop through population intervals and generate a label with a colored square for each interval
                 const loopOver = legendsValueMap[selectedSubcategory];
-                console.log(loopOver, "loopOver")
                 for (let i = 0; i < loopOver.length; i++) {
                     div.innerHTML +=
                         '<i style="background:' + getColor(loopOver[i] + 1) + '"></i> ' +
@@ -530,5 +510,4 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
 
 // Initialize the map once
 initializeMap();
-createNavigation();
 loadData();
