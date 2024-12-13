@@ -17,6 +17,9 @@ const UNEMPLOYMENT_SUBCATEGORIES = {
     maleUnemploymentPercentage: 'male-unemployment-percentage',
     femaleUnemploymentPercentage: 'female-unemployment-percentage'
 };
+const FOREST_COVERAGE_SUBCATEGORIES = {
+    forestCoveragePercentage: 'forest-coverage-percentage'
+};
 const mapDataCategories = [
     {
         label: 'Population',
@@ -77,6 +80,14 @@ const mapDataCategories = [
         subsections: []
     }
 ];
+
+mapDataCategories.find(category => category.id === 'environment').subsections.push(
+    {
+        label: 'Forest Coverage Percentage',
+        id: FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage,
+        dataPath: 'data/forest-coverage.json'
+    }
+);
 
 let activeSubCategory = null;
 
@@ -169,6 +180,19 @@ function getUnemploymentColors(d) {
                         '#FEB24C';
 }
 
+function getForestCoverageColors(d) {
+    return d > 90 ? '#006400' :
+        d > 80 ? '#228B22' :
+            d > 70 ? '#32CD32' :
+                d > 60 ? '#7CFC00' :
+                    d > 50 ? '#ADFF2F' :
+                        d > 40 ? '#FFFF00' :
+                            d > 30 ? '#FFD700' :
+                                d > 20 ? '#FFA500' :
+                                    d > 10 ? '#FF8C00' :
+                                        '#FF4500';
+}
+
 function getPopulationColors(d, selectedSubcategory) {
     const numbersWise = d > 100000 ? '#800026' :
         d > 60000 ? '#BD0026' :
@@ -195,6 +219,7 @@ function getPopulationColors(d, selectedSubcategory) {
                         d > 5 ? '#FEB24C' :
                             '#FFEDA0';
     const unemploymentWise = getUnemploymentColors(d);
+    const forestCoverageWise = getForestCoverageColors(d);
     switch (selectedSubcategory) {
         case POPULATION_SUBCATEGORIES.totalPopulation:
             return numbersWise
@@ -211,6 +236,8 @@ function getPopulationColors(d, selectedSubcategory) {
         case UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage:
         case UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage:
             return unemploymentWise;
+        case FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage:
+            return forestCoverageWise;
     }
 }
 
@@ -238,7 +265,8 @@ const legendsValueMap = {
     [POPULATION_SUBCATEGORIES.populationDensity]: [0, 5, 10, 20, 30, 40, 50],
     [UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage]: [0, 1, 2, 5, 10, 15],
     [UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage]: [0, 1, 2, 5, 10, 15],
-    [UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage]: [0, 1, 2, 5, 10, 15]
+    [UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage]: [0, 1, 2, 5, 10, 15],
+    [FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage]: [10, 20, 30, 40, 50, 60, 70, 80, 90]
 }
 // Update legend title based on subcategory
 const legendTitles = {
@@ -250,7 +278,8 @@ const legendTitles = {
     [POPULATION_SUBCATEGORIES.populationDensity]: `Population Density (per km²) - ${selectedYear}`,
     [UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage]: 'Total Unemployment Rate (%)',
     [UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage]: 'Total Male Unemployment Rate (%)',
-    [UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage]: 'Total Female Unemployment Rate (%)'
+    [UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage]: 'Total Female Unemployment Rate (%)',
+    [FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage]: 'Forest Coverage Percentage'
 };
 
 function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcategory = 'total-population') {
@@ -306,6 +335,9 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                     case UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage:
                         populationValue = populationData[feature.properties.NAME_1]?.["Unemployment Rate (%)"]?.["Total"];
                         break;
+                    case FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage:
+                        populationValue = populationData.find(d => d.dzongkhag === feature.properties.NAME_1)?.forestCoverPercentage;
+                        break;
                     default:
                         populationValue = populationData[feature.properties.NAME_1]?.["Both Sex"];
                 }
@@ -340,7 +372,8 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                     [POPULATION_SUBCATEGORIES.populationDensity]: `Population Density (per km²) - ${selectedYear}`,
                     [UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage]: 'Total Unemployment Rate (%)',
                     [UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage]: 'Total Male Unemployment Rate (%)',
-                    [UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage]: 'Total Female Unemployment Rate (%)'
+                    [UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage]: 'Total Female Unemployment Rate (%)',
+                    [FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage]: 'Forest Coverage Percentage'
                 };
 
                 // Legend title
@@ -411,6 +444,13 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                             additionalInfo = `
                                 Male Unemployed: ${populationData[feature.properties.NAME_1]?.["Number"]?.["Male"]}<br>
                                 Female Unemployed: ${populationData[feature.properties.NAME_1]?.["Number"]?.["Female"]}
+                            `;
+                            break;
+                        case FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage:
+                            populationValue = formatNumber(populationData.find(d => d.dzongkhag === feature.properties.NAME_1)?.forestCoverPercentage) + "%";
+                            populationLabel = "Forest Coverage Percentage";
+                            additionalInfo = `
+                                Forest Area: ${populationData.find(d => d.dzongkhag === feature.properties.NAME_1)?.forestCover}
                             `;
                             break;
                         default:
