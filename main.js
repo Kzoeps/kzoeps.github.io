@@ -77,17 +77,15 @@ const mapDataCategories = [
     {
         label: 'Environment',
         id: 'environment',
-        subsections: []
+        subsections: [
+            {
+                label: 'Forest Coverage Percentage',
+                id: FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage,
+                dataPath: 'data/forest-coverage.json'
+            }
+        ]
     }
 ];
-
-mapDataCategories.find(category => category.id === 'environment').subsections.push(
-    {
-        label: 'Forest Coverage Percentage',
-        id: FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage,
-        dataPath: 'data/forest-coverage.json'
-    }
-);
 
 let activeSubCategory = null;
 
