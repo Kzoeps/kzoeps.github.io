@@ -20,6 +20,9 @@ const UNEMPLOYMENT_SUBCATEGORIES = {
 const FOREST_COVERAGE_SUBCATEGORIES = {
     forestCoveragePercentage: 'forest-coverage-percentage'
 };
+const RAINFALL_SUBCATEGORIES = {
+    annualRainfall: 'annual-rainfall'
+};
 const mapDataCategories = [
     {
         label: 'Population',
@@ -49,7 +52,8 @@ const mapDataCategories = [
             {
                 label: "Population Density",
                 id: POPULATION_SUBCATEGORIES.populationDensity,
-                dataPath: 'data/pop-density.json'
+                dataPath: 'data/pop-density.json',
+                timeline: [2005, 2017]
             }
         ]
     },
@@ -82,6 +86,12 @@ const mapDataCategories = [
                 label: 'Forest Coverage Percentage',
                 id: FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage,
                 dataPath: 'data/forest-coverage.json'
+            },
+            {
+                label: 'Annual Rainfall',
+                id: RAINFALL_SUBCATEGORIES.annualRainfall,
+                dataPath: 'data/annual-rainfall.json',
+                timeline: [2018, 2019, 2020, 2021, 2022]
             }
         ]
     }
@@ -96,12 +106,16 @@ function createTogglesForYear(years) {
     yearToggleContainer.innerHTML = `
         <label for="year-toggle">Select Year:</label>
         <select id="year-toggle">
-            <option value="2005">2005</option>
-            <option value="2017" selected>2017</option>
+            ${years.map(year => `<option value="${year}" id=${year}>${year}</option>`).join('')}
         </select>
     `;
     yearToggleContainer.style.display = 'none';
-    return yearToggleContainer
+    return yearToggleContainer;
+}
+
+function updateYearToggle(years) {
+    const yearToggle = document.getElementById('year-toggle');
+    yearToggle.innerHTML = years.map(year => `<option value="${year}">${year}</option>`).join('');
 }
 
 function createNavigation() {
@@ -122,6 +136,7 @@ function createNavigation() {
 
     // Iterate through main categories
     mapDataCategories.forEach((categoryData) => {
+        console.log(categoryData)
         const categorySection = document.createElement('div');
         categorySection.className = 'nav-category';
         const categoryLabel = document.createElement('div');
@@ -144,6 +159,10 @@ function createNavigation() {
                 }
                 activeSubCategory = subsectionItem;
                 subsectionItem.classList.add('active');
+                if (subData.timeline) {
+                    console.log("getting called here")
+                    // selectedYear = subData.timeline[0];
+                }
                 loadData(subData.dataPath || categoryData.dataPath || 'data/dzongkhag-population.json', subData.id)
             })
             subsectionsContainer.appendChild(subsectionItem);
@@ -157,14 +176,14 @@ function createNavigation() {
     mapContainer.appendChild(navContainer);
 
     // Add year toggle for population density
-    const yearToggleContainer = createTogglesForYear() // Hide by default
+    const yearToggleContainer = createTogglesForYear([]); // Hide by default
     mapContainer.appendChild(yearToggleContainer);
 
     document.getElementById('year-toggle').addEventListener('change', (e) => {
-        console.log("How many event listenters")
-        if (activeSubCategory && activeSubCategory.id === POPULATION_SUBCATEGORIES.populationDensity && selectedYear !== e.target.value) {
-            loadData('data/pop-density.json', POPULATION_SUBCATEGORIES.populationDensity);
+        if (activeSubCategory && (activeSubCategory.id === POPULATION_SUBCATEGORIES.populationDensity || activeSubCategory.id === RAINFALL_SUBCATEGORIES.annualRainfall) && selectedYear !== e.target.value) {
+            loadData(activeSubCategory.id === POPULATION_SUBCATEGORIES.populationDensity ? 'data/pop-density.json' : 'data/annual-rainfall.json', activeSubCategory.id);
         }
+        console.log(e.target.value, "e.target.value")
         selectedYear = e.target.value;
     });
 }
@@ -189,6 +208,16 @@ function getForestCoverageColors(d) {
                                 d > 20 ? '#FFA500' :
                                     d > 10 ? '#FF8C00' :
                                         '#FF4500';
+}
+
+function getRainfallColors(d) {
+    return d > 5000 ? '#08306b' :
+        d > 4000 ? '#08519c' :
+            d > 3000 ? '#2171b5' :
+                d > 2000 ? '#4292c6' :
+                    d > 1000 ? '#6baed6' :
+                        d > 500 ? '#9ecae1' :
+                            '#c6dbef';
 }
 
 function getPopulationColors(d, selectedSubcategory) {
@@ -218,6 +247,7 @@ function getPopulationColors(d, selectedSubcategory) {
                             '#FFEDA0';
     const unemploymentWise = getUnemploymentColors(d);
     const forestCoverageWise = getForestCoverageColors(d);
+    const rainfallWise = getRainfallColors(d);
     switch (selectedSubcategory) {
         case POPULATION_SUBCATEGORIES.totalPopulation:
             return numbersWise
@@ -236,6 +266,8 @@ function getPopulationColors(d, selectedSubcategory) {
             return unemploymentWise;
         case FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage:
             return forestCoverageWise;
+        case RAINFALL_SUBCATEGORIES.annualRainfall:
+            return rainfallWise;
     }
 }
 
@@ -264,7 +296,8 @@ const legendsValueMap = {
     [UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage]: [0, 1, 2, 5, 10, 15],
     [UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage]: [0, 1, 2, 5, 10, 15],
     [UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage]: [0, 1, 2, 5, 10, 15],
-    [FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage]: [10, 20, 30, 40, 50, 60, 70, 80, 90]
+    [FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage]: [10, 20, 30, 40, 50, 60, 70, 80, 90],
+    [RAINFALL_SUBCATEGORIES.annualRainfall]: [0, 500, 1000, 2000, 3000, 4000, 5000]
 }
 // Update legend title based on subcategory
 const legendTitles = {
@@ -277,7 +310,8 @@ const legendTitles = {
     [UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage]: 'Total Unemployment Rate (%)',
     [UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage]: 'Total Male Unemployment Rate (%)',
     [UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage]: 'Total Female Unemployment Rate (%)',
-    [FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage]: 'Forest Coverage Percentage'
+    [FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage]: 'Forest Coverage Percentage',
+    [RAINFALL_SUBCATEGORIES.annualRainfall]: `Annual Rainfall (mm) - ${selectedYear}`
 };
 
 function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcategory = 'total-population') {
@@ -286,14 +320,27 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
         map.removeLayer(geoLayer);
     }
 
+    const category = mapDataCategories.find(cat => cat.subsections.some(sub => sub.id === selectedSubcategory));
+    const subcategory = category.subsections.find(sub => sub.id === selectedSubcategory);
+    const years = subcategory.timeline || [];
+
+    // Show year toggle only for population density and annual rainfall
+    const yearToggleContainer = document.getElementById('year-toggle-container');
+    if (years.length > 0) {
+        yearToggleContainer.style.display = 'block';
+        updateYearToggle(years);
+    } else {
+        yearToggleContainer.style.display = 'none';
+    }
+
     Promise.all([
         d3.json("gadm41_BTN_1.json"),
         d3.json(dataPath)
     ])
         .then(([geoJsonData, populationData]) => {
-            // Show year toggle only for population density
+            // Show year toggle only for population density and annual rainfall
             const yearToggleContainer = document.getElementById('year-toggle-container');
-            if (selectedSubcategory === POPULATION_SUBCATEGORIES.populationDensity) {
+            if (selectedSubcategory === POPULATION_SUBCATEGORIES.populationDensity || selectedSubcategory === RAINFALL_SUBCATEGORIES.annualRainfall) {
                 yearToggleContainer.style.display = 'block';
             } else {
                 yearToggleContainer.style.display = 'none';
@@ -336,6 +383,9 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                     case FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage:
                         populationValue = populationData.find(d => d.dzongkhag === feature.properties.NAME_1)?.forestCoverPercentage;
                         break;
+                    case RAINFALL_SUBCATEGORIES.annualRainfall:
+                        populationValue = populationData[feature.properties.NAME_1]?.[selectedYear];
+                        break;
                     default:
                         populationValue = populationData[feature.properties.NAME_1]?.["Both Sex"];
                 }
@@ -371,7 +421,8 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                     [UNEMPLOYMENT_SUBCATEGORIES.totalUnemploymentPercentage]: 'Total Unemployment Rate (%)',
                     [UNEMPLOYMENT_SUBCATEGORIES.maleUnemploymentPercentage]: 'Total Male Unemployment Rate (%)',
                     [UNEMPLOYMENT_SUBCATEGORIES.femaleUnemploymentPercentage]: 'Total Female Unemployment Rate (%)',
-                    [FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage]: 'Forest Coverage Percentage'
+                    [FOREST_COVERAGE_SUBCATEGORIES.forestCoveragePercentage]: 'Forest Coverage Percentage',
+                    [RAINFALL_SUBCATEGORIES.annualRainfall]: `Annual Rainfall (mm) - ${selectedYear}`
                 };
 
                 // Legend title
@@ -450,6 +501,10 @@ function loadData(dataPath = 'data/dzongkhag-population.json', selectedSubcatego
                             additionalInfo = `
                                 Forest Area: ${populationData.find(d => d.dzongkhag === feature.properties.NAME_1)?.forestCover}
                             `;
+                            break;
+                        case RAINFALL_SUBCATEGORIES.annualRainfall:
+                            populationValue = formatNumber(populationData[feature.properties.NAME_1]?.[selectedYear]);
+                            populationLabel = `Annual Rainfall (mm) - ${selectedYear}`;
                             break;
                         default:
                             populationValue = formatNumber(populationData[feature.properties.NAME_1]?.["Both Sex"]);
